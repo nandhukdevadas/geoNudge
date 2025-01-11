@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { Map as PigeonMap, Marker } from 'pigeon-maps';
 import { createTask } from '@/actions/task';
 import { useRouter } from 'next/navigation';
+import { useWatch } from "react-hook-form";
 
 
 interface Props {
@@ -48,11 +49,11 @@ function CreateTaskDialog({ open, collection, setOpen }: Props) {
       await createTask(data);
       openChangeWrapper(false);
       router.refresh();
-
     } catch (error) {
-      console.log("Error ho gaya bhai")
+      console.error("Task creation failed:", error); // Log the error
     }
   };
+  
 
 
   const [locationName, setLocationName] = useState<string>("");
@@ -108,28 +109,28 @@ function CreateTaskDialog({ open, collection, setOpen }: Props) {
     }
   }, []);
 
-  useEffect(() => {
-    const fetchLocationName = async () => {
-      const location = form.getValues("location"); // Get location value from form
+  const location = useWatch({ control: form.control, name: "location" });
 
-      if (location?.latitude !== undefined && location?.longitude !== undefined) {
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.latitude}&lon=${location.longitude}`
-          );
-          const data = await response.json();
-          setLocationName(data.display_name || "Unknown location");
-        } catch (error) {
-          console.error("Error fetching location name:", error);
-          setLocationName("Error retrieving location");
-        }
-      } else {
-        setLocationName("Invalid location data");
+useEffect(() => {
+  const fetchLocationName = async () => {
+    if (location?.latitude !== undefined && location?.longitude !== undefined) {
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.latitude}&lon=${location.longitude}`
+        );
+        const data = await response.json();
+        setLocationName(data.display_name || "Unknown location");
+      } catch (error) {
+        console.error("Error fetching location name:", error);
+        setLocationName("Error retrieving location");
       }
-    };
+    } else {
+      setLocationName("Invalid location data");
+    }
+  };
 
-    fetchLocationName(); // Call the fetch function
-  }, [form.watch("location")]); // Use form.watch to listen for location changes
+  fetchLocationName(); // Call the fetch function
+}, [location]); // Dependency is now simplified to just `location`
 
 
 
@@ -203,7 +204,7 @@ function CreateTaskDialog({ open, collection, setOpen }: Props) {
               <FormField
                 control={form.control}
                 name="expiresAt"
-                render={({ field }) => {
+                render={({}) => {
 
 
                   return (
@@ -317,7 +318,7 @@ function CreateTaskDialog({ open, collection, setOpen }: Props) {
               {/* Location */}
               <FormField
                 control={form.control}
-                name="location"
+                name="location" 
                 render={({ field }) => {
 
 

@@ -58,12 +58,12 @@ function TaskCard({ task }: { task: Task & { location?: Location } }) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           console.log("Location updated:", position.coords);
-          console.log("Current Location", currentLocation);
+          console.log("Current Location", currentLocation); // For debugging purposes
           setCurrentLocation({
             lat: position.coords.latitude,
             lon: position.coords.longitude,
           });
-
+  
           if (!hasNotified && task.location) {
             const distance = getDistance(
               position.coords.latitude,
@@ -72,7 +72,7 @@ function TaskCard({ task }: { task: Task & { location?: Location } }) {
               task.location.longitude
             );
             console.log(`Distance to task location: ${distance} meters`);
-
+  
             if (distance <= task.location.radius) {
               if (Notification.permission === "granted") {
                 new Notification(`Task Nearby`, {
@@ -99,9 +99,10 @@ function TaskCard({ task }: { task: Task & { location?: Location } }) {
         { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
       );
     }, 10000); // Check every 10 seconds
-
+  
     return () => clearInterval(interval);
-  }, [task, hasNotified]);
+  }, [task, hasNotified, currentLocation]); // Add `currentLocation` here
+  
 
   useEffect(() => {
     const interval = setInterval(() => {
