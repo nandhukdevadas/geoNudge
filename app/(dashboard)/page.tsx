@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import prisma from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
 import { Suspense } from "react";
-import { HeartCrack, PartyPopper } from 'lucide-react';
+import { HeartCrack } from 'lucide-react';
 import CreateCollectionBtn from "@/components/CreateCollectionBtn";
 import CollectionCard from "@/components/CollectionCard";
 import { ToastContainer } from "react-toastify";

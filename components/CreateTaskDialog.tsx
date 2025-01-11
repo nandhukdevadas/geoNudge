@@ -57,21 +57,6 @@ function CreateTaskDialog({ open, collection, setOpen }: Props) {
 
   const [locationName, setLocationName] = useState<string>("");
 
-  const fetchLocationName = async ({ latitude, longitude }: { latitude: number; longitude: number }) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
-      );
-      const data = await response.json();
-      setLocationName(data.display_name || "Unknown location");
-    } catch (error) {
-      console.error("Error fetching location:", error);
-      setLocationName("Error retrieving location");
-    }
-  };
-
-
-
 
   return (
     <Dialog open={open} onOpenChange={openChangeWrapper}>

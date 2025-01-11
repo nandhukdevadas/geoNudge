@@ -23,7 +23,6 @@ interface Props {
 }
 
 function CollectionCard({ collection }: Props) {
-    const locationCache = new Map<string, string>();
     const [isOpen, setIsOpen] = useState(true);
     const router = useRouter();
 
