@@ -35,7 +35,7 @@ async function WelcomeMsg()
 
   return (
     <div className="flex w-full justify-start mb-12">
-      <span className="text-2xl font-bold pr-2">Let's get started.</span> <CreateCollectionBtn/>
+      <span className="text-2xl font-bold pr-2">Let&apos;s get started.</span> <CreateCollectionBtn/>
     </div>
   );
 }

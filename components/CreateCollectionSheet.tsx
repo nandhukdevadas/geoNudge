@@ -32,25 +32,31 @@ function CreateCollectionSheet({ open, onOpenChange }: Props) {
   const router = useRouter();
 
 
-  const onSubmit = async(data: createCollectionSchemaType) => {
-    try{
+  const onSubmit = async (data: createCollectionSchemaType) => {
+    try {
       await createCollection(data);
-
+  
       openChangeWrapper(false);
-        router.refresh();
-
+      router.refresh();
+  
       toast({
-        title:"Success",
-        description:"Collection created successfully!",
+        title: "Success",
+        description: "Collection created successfully!",
       });
-    } catch(e:any){
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        console.error("Error creating collection:", e.message);
+      }
+  
       toast({
-        title:"Error",
-        description:"Something went wrong",
-        variant:"destructive",
+        title: "Error",
+        description: "Something went wrong",
+        variant: "destructive",
       });
     }
   };
+  
+  
 
   const openChangeWrapper = (open: boolean) => {
     form.reset();

@@ -46,7 +46,7 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return R * c;
 }
 
-function TaskCard({ task, onDelete }: { task: Task & { location?: Location }; onDelete: (taskId: number) => void }) {
+function TaskCard({ task }: { task: Task & { location?: Location } }) {
   const [translatedLocation, setTranslatedLocation] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [hasNotified, setHasNotified] = useState(false);
@@ -58,6 +58,7 @@ function TaskCard({ task, onDelete }: { task: Task & { location?: Location }; on
       navigator.geolocation.getCurrentPosition(
         (position) => {
           console.log("Location updated:", position.coords);
+          console.log("Current Location", currentLocation);
           setCurrentLocation({
             lat: position.coords.latitude,
             lon: position.coords.longitude,

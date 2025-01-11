@@ -33,7 +33,7 @@ function CreateTaskDialog({ open, collection, setOpen }: Props) {
       location: undefined, // Explicitly make location optional
     },
   });
-  
+
 
   const openChangeWrapper = (value: boolean) => {
     setOpen(value);
@@ -56,6 +56,98 @@ function CreateTaskDialog({ open, collection, setOpen }: Props) {
 
 
   const [locationName, setLocationName] = useState<string>("");
+
+  //Expiration date hooks:
+
+  const [selectedHour, setSelectedHour] = useState<number | null>(null); // Hour state
+  const [selectedMinute, setSelectedMinute] = useState<number | null>(null); // Minute state
+  const [tempDate, setTempDate] = useState<Date | null>(null); // Temporary selected date
+  const [finalDateTime, setFinalDateTime] = useState<Date | null>(null); // Confirmed date and time
+  const [isExpPopoverOpen, setIsExpPopoverOpen] = useState<boolean>(false); // Manage popover open/close state
+
+  const handleExpConfirm = () => {
+    if (!tempDate || selectedHour === null || selectedMinute === null) {
+      alert("Please select a date, hour, and minute before confirming.");
+      return;
+    }
+
+    const confirmedDateTime = new Date(tempDate);
+    confirmedDateTime.setHours(selectedHour, selectedMinute, 0, 0); // Set hour and minute
+
+    setFinalDateTime(confirmedDateTime); // Update the local state
+    form.setValue("expiresAt", confirmedDateTime); // Update the form state
+    setIsExpPopoverOpen(false); // Close the popover
+  };
+
+
+
+  //Location hooks:
+
+  const [center, setCenter] = useState<[number, number] | null>(null);
+  const [locationLoaded, setLocationLoaded] = useState(false);
+  const [isLocPopoverOpen, setIsLocPopoverOpen] = useState(false);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCenter([latitude, longitude]);
+          setLocationLoaded(true);
+        },
+        (error) => {
+          console.error("Error obtaining location:", error);
+          setCenter(null); // Default location
+          setLocationLoaded(true);
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+      setCenter(null); // Default location
+      setLocationLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchLocationName = async () => {
+      const location = form.getValues("location"); // Get location value from form
+
+      if (location?.latitude !== undefined && location?.longitude !== undefined) {
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.latitude}&lon=${location.longitude}`
+          );
+          const data = await response.json();
+          setLocationName(data.display_name || "Unknown location");
+        } catch (error) {
+          console.error("Error fetching location name:", error);
+          setLocationName("Error retrieving location");
+        }
+      } else {
+        setLocationName("Invalid location data");
+      }
+    };
+
+    fetchLocationName(); // Call the fetch function
+  }, [form.watch("location")]); // Use form.watch to listen for location changes
+
+
+
+  const handleLocConfirm = () => {
+    if (center) {
+      const updatedLocation = {
+        latitude: center[0],
+        longitude: center[1],
+        radius: form.getValues("location")?.radius || 0, // Include default radius if not set
+      };
+      form.setValue("location", updatedLocation); // Update location with latitude, longitude, and radius
+      setIsLocPopoverOpen(false); // Close the popover
+    } else {
+      form.setValue("location", { latitude: 0, longitude: 0, radius: 0 }); // Clear location with defaults
+    }
+  };
+
+
 
 
   return (
@@ -112,24 +204,7 @@ function CreateTaskDialog({ open, collection, setOpen }: Props) {
                 control={form.control}
                 name="expiresAt"
                 render={({ field }) => {
-                  const [selectedHour, setSelectedHour] = useState<number | null>(null); // Hour state
-                  const [selectedMinute, setSelectedMinute] = useState<number | null>(null); // Minute state
-                  const [tempDate, setTempDate] = useState<Date | null>(null); // Temporary selected date
-                  const [finalDateTime, setFinalDateTime] = useState<Date | null>(null); // Confirmed date and time
-                  const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false); // Manage popover open/close state
 
-                  const confirmDateTime = () => {
-                    if (!tempDate || selectedHour === null || selectedMinute === null) {
-                      alert("Please select date, hour, and minute before confirming.");
-                      return;
-                    }
-
-                    const confirmedDateTime = new Date(tempDate);
-                    confirmedDateTime.setHours(selectedHour, selectedMinute, 0, 0); // Set hour and minute
-                    setFinalDateTime(confirmedDateTime);
-                    field.onChange(confirmedDateTime); // Update form state
-                    setIsPopoverOpen(false); // Close the popover
-                  };
 
                   return (
                     <FormItem>
@@ -138,10 +213,10 @@ function CreateTaskDialog({ open, collection, setOpen }: Props) {
                         When should the task end?
                       </FormDescription>
                       <FormControl>
-                        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                        <Popover open={isExpPopoverOpen} onOpenChange={setIsExpPopoverOpen}>
                           <PopoverTrigger asChild>
                             <Button
-                              variant={"outline"}
+                              variant="outline"
                               className={cn(
                                 "justify-start text-left font-normal w-full py-2 px-4 border rounded-md hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary",
                                 !finalDateTime && "text-muted-foreground"
@@ -151,12 +226,11 @@ function CreateTaskDialog({ open, collection, setOpen }: Props) {
                               {finalDateTime
                                 ? `${format(finalDateTime, "PPP")} ${String(
                                   finalDateTime.getHours()
-                                ).padStart(2, "0")}:${String(
-                                  finalDateTime.getMinutes()
-                                ).padStart(2, "0")}`
-                                : <span>No deadline set</span>}
+                                ).padStart(2, "0")}:${String(finalDateTime.getMinutes()).padStart(2, "0")}`
+                                : "No deadline set"}
                             </Button>
                           </PopoverTrigger>
+
                           <PopoverContent className="p-4 border rounded-md shadow-lg bg-white dark:bg-neutral-900 w-full max-w-lg">
 
                             {/* Calendar and Time Picker Layout */}
@@ -225,7 +299,7 @@ function CreateTaskDialog({ open, collection, setOpen }: Props) {
                                 <Button
                                   variant="outline"
                                   className="mt-4 w-full"
-                                  onClick={confirmDateTime}
+                                  onClick={handleExpConfirm}
                                 >
                                   Confirm
                                 </Button>
@@ -245,63 +319,7 @@ function CreateTaskDialog({ open, collection, setOpen }: Props) {
                 control={form.control}
                 name="location"
                 render={({ field }) => {
-                  const [center, setCenter] = useState<[number, number] | null>(null);
-                  const [locationLoaded, setLocationLoaded] = useState(false);
-                  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
-                  useEffect(() => {
-                    if (navigator.geolocation) {
-                      navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                          const { latitude, longitude } = position.coords;
-                          setCenter([latitude, longitude]);
-                          setLocationLoaded(true);
-                        },
-                        (error) => {
-                          console.error("Error obtaining location:", error);
-                          setCenter(null); // Default location
-                          setLocationLoaded(true);
-                        }
-                      );
-                    } else {
-                      console.error("Geolocation is not supported by this browser.");
-                      setCenter(null); // Default location
-                      setLocationLoaded(true);
-                    }
-                  }, []);
-
-                  useEffect(() => {
-                    const fetchLocationName = async () => {
-                      if (field.value && field.value.latitude !== undefined && field.value.longitude !== undefined) {
-                        try {
-                          const response = await fetch(
-                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${field.value.latitude}&lon=${field.value.longitude}`
-                          );
-                          const data = await response.json();
-                          setLocationName(data.display_name || "Unknown location");
-                        } catch (error) {
-
-                          setLocationName("Error retrieving location");
-                        }
-                      } else {
-
-                        setLocationName("Invalid location data");
-                      }
-                    };
-
-                    fetchLocationName(); // Call the fetch function
-                  }, [field.value]);
-
-
-                  const handleConfirm = () => {
-                    if (center) {
-                      const updatedLocation = { latitude: center[0], longitude: center[1] };
-                      field.onChange(updatedLocation); // Set location
-                      setIsPopoverOpen(false);
-                    } else {
-                      field.onChange(undefined); // Clear location
-                    }
-                  };
 
 
                   return (
@@ -311,7 +329,7 @@ function CreateTaskDialog({ open, collection, setOpen }: Props) {
                         Select a location for your reminder.
                       </FormDescription>
                       <FormControl>
-                        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                        <Popover open={isLocPopoverOpen} onOpenChange={setIsLocPopoverOpen}>
                           <div className="p-4 border rounded-md shadow-lg bg-white dark:bg-neutral-900">
                             {locationLoaded ? (
                               <div className="flex flex-col items-center gap-4">
@@ -327,7 +345,7 @@ function CreateTaskDialog({ open, collection, setOpen }: Props) {
                                   type="button"
                                   variant="outline"
                                   className="mt-2 w-full"
-                                  onClick={handleConfirm}
+                                  onClick={handleLocConfirm}
                                 >
                                   Confirm Location
                                 </Button>

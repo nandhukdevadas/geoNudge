@@ -45,7 +45,7 @@ function CollectionCard({ collection }: Props) {
                 description: "Collection deleted successfully",
             });
             router.refresh();
-        } catch (e) {
+        } catch {
             toast({
                 title: "Error",
                 description: "Couldn't delete the collection",
@@ -53,6 +53,7 @@ function CollectionCard({ collection }: Props) {
             });
         }
     };
+    
 
     return (
         <>
@@ -104,10 +105,7 @@ function CollectionCard({ collection }: Props) {
                                     <TaskCard
                                         key={task.id}
                                         task={task}
-                                        onDelete={(taskId) => {
-                                            // Update collection tasks to remove the deleted task
-                                            collection.tasks = collection.tasks.filter((t) => t.id !== taskId);
-                                        }}
+
                                     />
                                 ))}
                             </div>
