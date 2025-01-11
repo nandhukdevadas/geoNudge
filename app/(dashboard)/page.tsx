@@ -1,7 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import prisma from "@/lib/prisma";
-import { wait } from "@/lib/wait";
 import { currentUser } from "@clerk/nextjs/server";
 import { Suspense } from "react";
 import { HeartCrack, PartyPopper } from 'lucide-react';
@@ -57,7 +56,7 @@ async function CollectionList()
     include: {
       tasks: {
         include: {
-          location: true, // Include location relation for each task
+          location: true, 
         },
       },
     },
@@ -91,8 +90,7 @@ async function CollectionList()
         <CollectionCard key={collection.id} collection={collection} />
         ))}
     </div>
-      
-        
+          
     </>
   )
 }

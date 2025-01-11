@@ -7,7 +7,6 @@ import { Separator } from '@/components/ui/separator';
 import { ThemeProvider } from '../providers/ThemeProvider';
 import { cn } from '@/lib/utils';
 import { Inter } from 'next/font/google'; 
-import { Toast } from '@/components/ui/toast';
 import { Toaster } from '@/components/ui/toaster';
 import 'leaflet/dist/leaflet.css';
 
